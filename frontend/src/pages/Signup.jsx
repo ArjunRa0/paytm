@@ -1,51 +1,101 @@
-import { useState } from "react"
-import { BottomWarning } from "../components/BottomWarning"
-import { Button } from "../components/Button"
-import { Heading } from "../components/Heading"
-import { InputBox } from "../components/InputBox.jsx"
-import { SubHeading } from "../components/SubHeading.jsx"
-import axios from "axios";
-import { useNavigate } from "react-router-dom"
+import React, { useState } from "react";
+import Heading from "../components/Heading";
+import SubHeading from "../components/SubHeading";
+import InputBox from "../components/InputBox";
+import Button from "../components/Button";
+import BottomWarning from "../components/BottomWarning";
+import { signup } from "../services/operations/authApi";
+import { useNavigate } from "react-router-dom";
 
+const Signup = () => {
+  const [formData, setFormData] = useState({
+    firstname: "",
+    lastname: "",
+    email: "",
+    password: "",
+  });
 
-export const Signup = () => {
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const navigate = useNavigate();
+  const [showError, setShowError] = useState(false);
 
-    return <div className="bg-slate-300 h-screen flex justify-center">
-    <div className="flex flex-col justify-center">
-      <div className="rounded-lg bg-white w-80 text-center p-2 h-max px-4">
-        <Heading label={"Sign up"} />
-        <SubHeading label={"Enter your infromation to create an account"} />
-        <InputBox onChange={e => {
-          setFirstName(e.target.value);
-        }} placeholder="John" label={"First Name"} />
-        <InputBox onChange={e => {
-          setLastName(e.target.value);
-        }}placeholder="Doe" label={"Last Name"} />
-        <InputBox onChange={e => {
-          setUsername(e.target.value);
-        }}placeholder="harkirat@gmail.com" label={"Email"} />
-        <InputBox onChange={e => {
-          setPassword(e.target.value);
-        }}placeholder="123456" label={"Password"} />
-        <div className="pt-4">
-          <Button onClick={()=> {
-            const response = axios.post("http://localhost:3000/api/v1/user/signup", {
-              username,
-              firstName,
-              lastName,
-              password
-            });
-            localStorage.setItem("token", response.data.token)
-            navigate("/dashboard")
-          }}label={"Sign up"} />
+  const navigate = useNavigate();
+
+  function changeHandler(event) {
+    setFormData((prev) => ({
+      ...prev,
+      [event.target.name]: event.target.value,
+    }));
+  }
+
+  async function hanldeClick(event) {
+    event.preventDefault();
+    const response = await signup(
+      formData.firstname,
+      formData.lastname,
+      formData.email,
+      formData.password
+    );
+    if (response === "User created successfully") {
+      setFormData({
+        firstname: "",
+        lastname: "",
+        email: "",
+        password: "",
+      });
+      setShowError(false);
+      navigate("/signin");
+    } else {
+      setShowError(true);
+    }
+  }
+  return (
+    <div className="bg-slate-300 h-screen flex justify-center items-center">
+      <div className="bg-white rounded-lg w-[80%] sm:w-[50%] lg:w-[23%] text-center p-3">
+        <div className="flex flex-col">
+          <Heading label={"Sign Up"} />
+          <SubHeading label={"Enter your information to create an account"} />
+          <InputBox
+            label={"First Name"}
+            placeholder={"John"}
+            name={"firstname"}
+            value={formData.firstname}
+            onChange={changeHandler}
+          />
+          <InputBox
+            label={"Last Name"}
+            placeholder={"Doe"}
+            name={"lastname"}
+            value={formData.lastname}
+            onChange={changeHandler}
+          />
+          <InputBox
+            label={"Email"}
+            placeholder={"johndoe@example.com"}
+            name={"email"}
+            value={formData.email}
+            onChange={changeHandler}
+          />
+          <InputBox
+            label={"Password"}
+            placeholder={"123456"}
+            name={"password"}
+            value={formData.password}
+            onChange={changeHandler}
+          />
+          <Button label={"Sign up"} onClick={hanldeClick} />
+          <BottomWarning
+            label={"Already have an account? "}
+            to={"/signin"}
+            buttonText={"Sign in"}
+          />
+          {showError && (
+            <div className="font-light text-red-700 text-xs mt-2">
+              Signup Failed!
+            </div>
+          )}
         </div>
-        <BottomWarning label={"Already have an account?"} buttonText={"Sign in"} to={"/signin"} />
       </div>
     </div>
-  </div>
-}
+  );
+};
+
+export default Signup;
